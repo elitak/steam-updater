@@ -28,7 +28,7 @@ $ErrorActionPreference = 'Stop'
 # Installs it from PSGallery at runtime if not already present.
 if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
     Write-Host "[yaml] 'powershell-yaml' module not found – installing from PSGallery ..." -ForegroundColor Yellow
-    Install-Module -Name 'powershell-yaml' -Scope CurrentUser -Force -AllowClobber
+    Install-Module -Name 'powershell-yaml' -Repository PSGallery -Scope CurrentUser -Force -AllowClobber
 }
 Import-Module -Name 'powershell-yaml' -ErrorAction Stop
 
