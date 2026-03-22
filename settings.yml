@@ -1,0 +1,36 @@
+# ──────────────────────────────────────────────────────────────────
+#  steam-updater — settings.yml
+#
+#  Structure:
+#    library_root  (optional) — where to install games.
+#                               Defaults to C:\SteamLibrary
+#
+#    accounts:
+#      <any_label>:
+#        login:    <steam_username>
+#        password: "<steam_password>"
+#        appids:
+#          - <appid>
+#          - <appid>
+#
+#  ⚠  Steam Guard / Mobile Authenticator must be DISABLED on every
+#     account listed here. SteamCMD cannot handle 2-FA interactively.
+# ──────────────────────────────────────────────────────────────────
+
+library_root: "C:\SteamLibrary"
+
+accounts:
+  account_one:
+    login: my_steam_user
+    password: "my_steam_password"
+    appids:
+      - 730      # Counter-Strike 2
+      - 570      # Dota 2
+      - 440      # Team Fortress 2
+
+  account_two:
+    login: another_user
+    password: "another_password"
+    appids:
+      - 1091500  # Cyberpunk 2077
+      - 1172470  # Apex Legends
