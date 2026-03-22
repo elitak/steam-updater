@@ -12,7 +12,6 @@
       appIDs are used directly; appREs are resolved via the Steam Web API.
     - After all updates complete, relaunches Steam.exe logged in as the first
       account listed in settings.yml.
-
 .NOTES
     Steam Guard / Mobile Authenticator must be disabled on all accounts
     used here - SteamCMD cannot handle interactive 2-FA prompts.
@@ -41,7 +40,7 @@ $SteamCmdZip  = Join-Path $env:TEMP 'steamcmd.zip'
 $SteamCmdUrl  = 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip'
 
 # Steam Web API endpoint - returns the full public app catalogue, no key needed
-$SteamAppListUrl = 'https://api.steampowered.com/ISteamApps/GetAppList/v0000/'
+$SteamAppListUrl = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/'
 
 # Common Steam install locations - first one found wins
 $SteamExeSearchPaths = @(
@@ -278,35 +277,32 @@ foreach ($accountName in $accounts.Keys) {
     $account  = $accounts[$accountName]
     $login    = $accountName                  # account label IS the Steam login
     $password = $account['password']
-    $appIDs   = $account['appIDs']
-    $appREs   = $account['appREs']
+    $appIDs   = if ($account['appIDs']) { @($account['appIDs']) } else { @() }
+    $appREs   = if ($account['appREs']) { @($account['appREs']) } else { @() }
 
     if (-not $password) { Write-Warning "Account '$accountName' has no 'password' -- skipping."; continue }
-    if (-not $appIDs -and -not $appREs) {
+    if ($appIDs.Count -eq 0 -and $appREs.Count -eq 0) {
         Write-Warning "Account '$accountName' has neither 'appIDs' nor 'appREs' -- skipping."
         continue
     }
 
     # Resolve regex patterns to additional app IDs
     $resolvedIDs = @()
-    if ($appREs) {
-        $resolvedIDs = Resolve-AppREs -Patterns $appREs
+    if ($appREs.Count -gt 0) {
+        $resolvedIDs = @(Resolve-AppREs -Patterns $appREs)
     }
 
-    # Merge explicit + resolved IDs, deduplicate
-    $allIDs = @()
-    if ($appIDs)     { $allIDs += $appIDs }
-    if ($resolvedIDs){ $allIDs += $resolvedIDs }
-    $allIDs = $allIDs | Select-Object -Unique
+    # Merge explicit + resolved IDs, deduplicate — always keep as array
+    $allIDs = @($appIDs + $resolvedIDs | Select-Object -Unique)
 
-    Write-Host "``n[account] $accountName  ($($allIDs.Count) app(s))" -ForegroundColor Magenta
+    Write-Host "`n[account] $accountName  ($($allIDs.Count) app(s))" -ForegroundColor Magenta
 
     foreach ($appId in $allIDs) {
         Update-App -Login $login -Password $password -AppId $appId -LibraryRoot $libraryRoot
     }
 }
 
-Write-Host "``n[all done] Steam library update complete." -ForegroundColor Green
+Write-Host "`n[all done] Steam library update complete." -ForegroundColor Green
 
 # 5. Relaunch Steam.exe logged in as the first account
 if ($steamWasOpen) {
