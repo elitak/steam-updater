@@ -1,0 +1,7 @@
+# Enforce LF line endings for text files checked into git
+* text=auto
+
+# PowerShell - always treat as text, no BOM
+*.ps1 text eol=lf
+*.psm1 text eol=lf
+*.psd1 text eol=lf

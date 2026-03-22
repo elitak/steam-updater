@@ -15,7 +15,7 @@
 
 .NOTES
     Steam Guard / Mobile Authenticator must be disabled on all accounts
-    used here — SteamCMD cannot handle interactive 2-FA prompts.
+    used here - SteamCMD cannot handle interactive 2-FA prompts.
 #>
 
 #Requires -Version 5.1
@@ -23,16 +23,16 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── YAML module ──────────────────────────────────────────────────────────────
+# -- YAML module --------------------------------------------------------------
 # Uses the 'powershell-yaml' module (https://github.com/cloudbase/powershell-yaml).
 # Installs it from PSGallery at runtime if not already present.
 if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
-    Write-Host "[yaml] 'powershell-yaml' module not found – installing from PSGallery ..." -ForegroundColor Yellow
+    Write-Host "[yaml] 'powershell-yaml' module not found - installing from PSGallery ..." -ForegroundColor Yellow
     Install-Module -Name 'powershell-yaml' -Repository PSGallery -Scope CurrentUser -Force -AllowClobber
 }
 Import-Module -Name 'powershell-yaml' -ErrorAction Stop
 
-# ── Paths ────────────────────────────────────────────────────────────────────
+# -- Paths --------------------------------------------------------------------
 $ScriptDir    = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $SettingsFile = Join-Path $ScriptDir 'settings.yml'
 $SteamCmdDir  = Join-Path $env:ProgramData 'SteamCMD'
@@ -40,10 +40,10 @@ $SteamCmdExe  = Join-Path $SteamCmdDir 'steamcmd.exe'
 $SteamCmdZip  = Join-Path $env:TEMP 'steamcmd.zip'
 $SteamCmdUrl  = 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip'
 
-# Steam Web API endpoint – returns the full public app catalogue, no key needed
+# Steam Web API endpoint - returns the full public app catalogue, no key needed
 $SteamAppListUrl = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/'
 
-# Common Steam install locations — first one found wins
+# Common Steam install locations - first one found wins
 $SteamExeSearchPaths = @(
     'C:\Program Files (x86)\Steam\Steam.exe',
     'C:\Program Files\Steam\Steam.exe',
@@ -60,7 +60,7 @@ function Find-SteamExe {
     return $null
 }
 
-# ── Steam shutdown countdown dialog ──────────────────────────────────────────
+# -- Steam shutdown countdown dialog ------------------------------------------
 function Invoke-SteamShutdownDialog {
     <#
     Shows a WinForms dialog with a live 10-second countdown.
@@ -136,7 +136,7 @@ function Invoke-SteamShutdownDialog {
     return ($script:userChoice -ne 'abort')
 }
 
-# ── Bootstrap SteamCMD ───────────────────────────────────────────────────────
+# -- Bootstrap SteamCMD -------------------------------------------------------
 function Install-SteamCmd {
     if (Test-Path $SteamCmdExe) {
         Write-Host "[bootstrap] SteamCMD already installed at $SteamCmdExe" -ForegroundColor Cyan
@@ -157,7 +157,7 @@ function Install-SteamCmd {
     Write-Host "[bootstrap] SteamCMD installed successfully." -ForegroundColor Green
 }
 
-# ── Load settings ────────────────────────────────────────────────────────────
+# -- Load settings ------------------------------------------------------------
 function Get-Settings {
     if (-not (Test-Path $SettingsFile)) {
         throw "settings.yml not found at: $SettingsFile"
@@ -166,7 +166,7 @@ function Get-Settings {
     return ConvertFrom-Yaml -Yaml $raw -Ordered
 }
 
-# ── Resolve appREs to appIDs via Steam Web API ────────────────────────────────
+# -- Resolve appREs to appIDs via Steam Web API --------------------------------
 # Fetches the public app list once and caches it for the lifetime of the script.
 $script:SteamAppList = $null
 
@@ -197,7 +197,7 @@ function Resolve-AppREs {
     return $resolved.ToArray()
 }
 
-# ── Update a single app ──────────────────────────────────────────────────────
+# -- Update a single app ------------------------------------------------------
 function Update-App {
     param(
         [string]$Login,
@@ -227,7 +227,7 @@ function Update-App {
     }
 }
 
-# ── Main ─────────────────────────────────────────────────────────────────────
+# -- Main ---------------------------------------------------------------------
 
 # 1. Load settings early (needed for Steam relaunch credentials)
 $settings    = Get-Settings
