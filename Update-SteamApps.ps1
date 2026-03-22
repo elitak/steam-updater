@@ -41,7 +41,7 @@ $SteamCmdZip  = Join-Path $env:TEMP 'steamcmd.zip'
 $SteamCmdUrl  = 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip'
 
 # Steam Web API endpoint - returns the full public app catalogue, no key needed
-$SteamAppListUrl = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/'
+$SteamAppListUrl = 'https://api.steampowered.com/ISteamApps/GetAppList/v0000/'
 
 # Common Steam install locations - first one found wins
 $SteamExeSearchPaths = @(
@@ -209,8 +209,8 @@ function Update-App {
     Write-Host "  [update] AppID $AppId  (account: $Login)" -ForegroundColor White
 
     $steamArgs = @(
-        "+force_install_dir `"$LibraryRoot`"",
-        "+login `"$Login`" `"$Password`"",
+        "+force_install_dir `"$LibraryRoot`", 
+        "+login `"$Login`" `"$Password`", 
         "+app_update $AppId validate",
         '+quit'
     ) -join ' '
@@ -316,6 +316,6 @@ if ($steamWasOpen) {
         Start-Process -FilePath $steamExePath -ArgumentList "-login `"$firstLogin`" `"$firstPassword`""
     }
     else {
-        Write-Warning "[steam] Could not find Steam.exe -- please start Steam manually."
+        Write-Warning "[steam] Could not find Steam.exe -- please start Steam manually." 
     }
 }
