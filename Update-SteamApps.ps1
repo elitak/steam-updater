@@ -232,7 +232,7 @@ function Update-App {
 $settings    = Get-Settings
 $libraryRoot = if ($settings['library_root']) { $settings['library_root'] } else { 'C:\SteamLibrary' }
 $accounts    = $settings['accounts']
-if (-not $accounts) { throw "No 'accounts' key found in settings.yml" }
+if ($null -eq $accounts) { throw "No 'accounts' key found in settings.yml" }
 
 # First account is used to relaunch Steam.exe after updates
 $firstAccountName = @($accounts.Keys)[0]
@@ -277,28 +277,33 @@ foreach ($accountName in $accounts.Keys) {
     $account  = $accounts[$accountName]
     $login    = $accountName                  # account label IS the Steam login
     $password = $account['password']
-    $appIDs   = if ($account['appIDs']) { @($account['appIDs']) } else { @() }
-    $appREs   = if ($account['appREs']) { @($account['appREs']) } else { @() }
 
-    if (-not $password) { Write-Warning "Account '$accountName' has no 'password' -- skipping."; continue }
-    if ($appIDs.Count -eq 0 -and $appREs.Count -eq 0) {
+    # powershell-yaml returns $null for absent keys and a bare string for
+    # single-item lists — normalise both to a plain array in all cases.
+    $rawAppIDs = $account['appIDs']
+    $rawAppREs = $account['appREs']
+    $appIDs    = if ($null -ne $rawAppIDs) { [object[]]@($rawAppIDs) } else { [object[]]@() }
+    $appREs    = if ($null -ne $rawAppREs) { [object[]]@($rawAppREs) } else { [object[]]@() }
+
+    if ($null -eq $password) { Write-Warning "Account '$accountName' has no 'password' -- skipping."; continue }
+    if ($appIDs.Length -eq 0 -and $appREs.Length -eq 0) {
         Write-Warning "Account '$accountName' has neither 'appIDs' nor 'appREs' -- skipping."
         continue
     }
 
     # Resolve regex patterns to additional app IDs
-    $resolvedIDs = @()
-    if ($appREs.Count -gt 0) {
-        $resolvedIDs = @(Resolve-AppREs -Patterns $appREs)
+    $resolvedIDs = [object[]]@()
+    if ($appREs.Length -gt 0) {
+        $resolvedIDs = [object[]]@(Resolve-AppREs -Patterns ([string[]]$appREs))
     }
 
     # Merge explicit + resolved IDs, deduplicate — always keep as array
-    $allIDs = @($appIDs + $resolvedIDs | Select-Object -Unique)
+    $allIDs = [object[]]@($appIDs + $resolvedIDs | Select-Object -Unique)
 
-    Write-Host "`n[account] $accountName  ($($allIDs.Count) app(s))" -ForegroundColor Magenta
+    Write-Host "`n[account] $accountName  ($($allIDs.Length) app(s))" -ForegroundColor Magenta
 
     foreach ($appId in $allIDs) {
-        Update-App -Login $login -Password $password -AppId $appId -LibraryRoot $libraryRoot
+        Update-App -Login $login -Password $password -AppId ([string]$appId) -LibraryRoot $libraryRoot
     }
 }
 
