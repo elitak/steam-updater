@@ -1,4 +1,4 @@
-# ──────────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────
 #  steam-updater — settings.yml
 #
 #  Structure:
@@ -6,31 +6,32 @@
 #                               Defaults to C:\SteamLibrary
 #
 #    accounts:
-#      <any_label>:
-#        login:    <steam_username>
+#      <steam_username>:        ← the key IS the Steam login name
 #        password: "<steam_password>"
-#        appids:
+#        appIDs:                ← optional: explicit numeric App IDs
 #          - <appid>
 #          - <appid>
+#        appREs:                ← optional: regex patterns matched against
+#          - '<regex>'            Steam app titles (Steam API lookup)
 #
 #  ⚠  Steam Guard / Mobile Authenticator must be DISABLED on every
 #     account listed here. SteamCMD cannot handle 2-FA interactively.
-# ──────────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────
 
 library_root: "C:\SteamLibrary"
 
 accounts:
-  account_one:
-    login: my_steam_user
+  my_steam_user:
     password: "my_steam_password"
-    appids:
+    appIDs:
       - 730      # Counter-Strike 2
       - 570      # Dota 2
       - 440      # Team Fortress 2
+    appREs:
+      - '^Portal$'             # exact title match
 
-  account_two:
-    login: another_user
+  another_user:
     password: "another_password"
-    appids:
+    appIDs:
       - 1091500  # Cyberpunk 2077
       - 1172470  # Apex Legends
