@@ -209,8 +209,8 @@ function Update-App {
     Write-Host "  [update] AppID $AppId  (account: $Login)" -ForegroundColor White
 
     $steamArgs = @(
-        "+force_install_dir `"$LibraryRoot`", 
-        "+login `"$Login`" `"$Password`", 
+        "+force_install_dir `"$LibraryRoot`"",
+        "+login `"$Login`" `"$Password`"",
         "+app_update $AppId validate",
         '+quit'
     ) -join ' '
@@ -299,14 +299,14 @@ foreach ($accountName in $accounts.Keys) {
     if ($resolvedIDs){ $allIDs += $resolvedIDs }
     $allIDs = $allIDs | Select-Object -Unique
 
-    Write-Host "`n[account] $accountName  ($($allIDs.Count) app(s))" -ForegroundColor Magenta
+    Write-Host "``n[account] $accountName  ($($allIDs.Count) app(s))" -ForegroundColor Magenta
 
     foreach ($appId in $allIDs) {
         Update-App -Login $login -Password $password -AppId $appId -LibraryRoot $libraryRoot
     }
 }
 
-Write-Host "`n[all done] Steam library update complete." -ForegroundColor Green
+Write-Host "``n[all done] Steam library update complete." -ForegroundColor Green
 
 # 5. Relaunch Steam.exe logged in as the first account
 if ($steamWasOpen) {
@@ -316,6 +316,6 @@ if ($steamWasOpen) {
         Start-Process -FilePath $steamExePath -ArgumentList "-login `"$firstLogin`" `"$firstPassword`""
     }
     else {
-        Write-Warning "[steam] Could not find Steam.exe -- please start Steam manually." 
+        Write-Warning "[steam] Could not find Steam.exe -- please start Steam manually."
     }
 }
