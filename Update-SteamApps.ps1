@@ -12,6 +12,7 @@
       appIDs are used directly; appREs are resolved via the Steam Web API.
     - After all updates complete, relaunches Steam.exe logged in as the first
       account listed in settings.yml.
+
 .NOTES
     Steam Guard / Mobile Authenticator must be disabled on all accounts
     used here - SteamCMD cannot handle interactive 2-FA prompts.
@@ -208,9 +209,9 @@ function Update-App {
     Write-Host "  [update] AppID $AppId  (account: $Login)" -ForegroundColor White
 
     $steamArgs = @(
-        "+force_install_dir `"$LibraryRoot`"",
-        "+login `"$Login`" `"$Password`"",
-        "+app_update $AppId validate",
+        "+force_install_dir `"$LibraryRoot`", 
+        "+login `"$Login`" `"$Password`", 
+        "+app_update $AppId validate", 
         '+quit'
     ) -join ' '
 
@@ -278,29 +279,28 @@ foreach ($accountName in $accounts.Keys) {
     $login    = $accountName                  # account label IS the Steam login
     $password = $account['password']
 
-    # powershell-yaml returns $null for absent keys and a bare string for
-    # single-item lists — normalise both to a plain array in all cases.
-    $rawAppIDs = $account['appIDs']
-    $rawAppREs = $account['appREs']
-    $appIDs    = if ($null -ne $rawAppIDs) { [object[]]@($rawAppIDs) } else { [object[]]@() }
-    $appREs    = if ($null -ne $rawAppREs) { [object[]]@($rawAppREs) } else { [object[]]@() }
+    # powershell-yaml may return $null, a bare string, or a List/array depending
+    # on the YAML content.  Re-wrap via @() to guarantee a plain [object[]] whose
+    # .Count is a real concrete property under Set-StrictMode -Version Latest.
+    $appIDs = @(if ($null -ne $account['appIDs']) { $account['appIDs'] })
+    $appREs = @(if ($null -ne $account['appREs']) { $account['appREs'] })
 
     if ($null -eq $password) { Write-Warning "Account '$accountName' has no 'password' -- skipping."; continue }
-    if ($appIDs.Length -eq 0 -and $appREs.Length -eq 0) {
+    if ($appIDs.Count -eq 0 -and $appREs.Count -eq 0) {
         Write-Warning "Account '$accountName' has neither 'appIDs' nor 'appREs' -- skipping."
         continue
     }
 
     # Resolve regex patterns to additional app IDs
-    $resolvedIDs = [object[]]@()
-    if ($appREs.Length -gt 0) {
-        $resolvedIDs = [object[]]@(Resolve-AppREs -Patterns ([string[]]$appREs))
+    $resolvedIDs = @()
+    if ($appREs.Count -gt 0) {
+        $resolvedIDs = @(Resolve-AppREs -Patterns ([string[]]$appREs))
     }
 
-    # Merge explicit + resolved IDs, deduplicate — always keep as array
-    $allIDs = [object[]]@($appIDs + $resolvedIDs | Select-Object -Unique)
+    # Merge explicit + resolved IDs, deduplicate - keep as plain array
+    $allIDs = @($appIDs + $resolvedIDs | Select-Object -Unique)
 
-    Write-Host "`n[account] $accountName  ($($allIDs.Length) app(s))" -ForegroundColor Magenta
+    Write-Host "`n[account] $accountName  ($($allIDs.Count) app(s))" -ForegroundColor Magenta
 
     foreach ($appId in $allIDs) {
         Update-App -Login $login -Password $password -AppId ([string]$appId) -LibraryRoot $libraryRoot
